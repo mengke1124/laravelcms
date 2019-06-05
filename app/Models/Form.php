@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+
+/**
+ * 表单模型
+ * 
+ * Class File
+ *
+ * @package App\Models
+ * @property int $id
+ * @property string $object_id objectId
+ * @property string $form 所属表单
+ * @property int $user_id 用户id
+ * @property string $ip IP
+ * @property string|null $location 最后一次登录地址
+ * @property mixed $data 数据
+ * @property string $status 状态
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\MultipleFile[] $multiple_files
+ * @property-read \App\Models\User $user
+ * @method static bool|null forceDelete()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form newQuery()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Form onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model ordered($sortOrder = 'desc')
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form query()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model recent($sortOrder = 'desc')
+ * @method static bool|null restore()
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereData($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereForm($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereLocation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereObjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Form whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Model withOrder($sortField, $sortOrder)
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Form withTrashed()
+ * @method static \Illuminate\Database\Query\Builder|\App\Models\Form withoutTrashed()
+ * @mixin \Eloquent
+ */
+class Form extends Model
+{
+    use SoftDeletes;
+    
+    protected $fillable = ['id','object_id', 'form', 'user_id', 'ip', 'location', 'data', 'status', ];
+    
+    protected $dates = ['created_at', 'updated_at', 'deleted_at'];
+
+    public function user(){
+        return $this->belongsTo('\App\Models\User', 'user_id');
+    }
+
+    /**
+     * 复写获取属性方法，扩展自定义复合属性
+     *
+     * @param string $key
+     * @return mixed|null
+     */
+    public function getAttribute($key){
+
+        $value = parent::getAttribute($key);
+
+        $data = parent::getAttribute('data');
+
+        if(is_array($data)){
+            $data = empty($data) ? new \stdClass() : $data;
+        }else if( is_string( $data ) ){
+            $data = empty($data) ? new \stdClass() : json_decode($data, true);
+        }
+
+        if( $key !== $value && is_array($data) && array_key_exists($key, $data)){
+            $value = $data[$key] ?? null;
+        }
+
+        return $value;
+    }
+    
+}
